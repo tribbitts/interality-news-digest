@@ -6,6 +6,11 @@
   <title>interality news digest</title>
   <link href="https://fonts.googleapis.com/css?family=Inter:400,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#181a1b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.png') }}">
   <style>
     @media (max-width: 700px) {
       .article-grid { grid-template-columns: 1fr !important; }
