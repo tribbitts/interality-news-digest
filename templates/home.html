@@ -1,24 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6962911069135509"
+     crossorigin="anonymous"></script>
   <title>interality news digest</title>
-  <!-- Modern font and dark theme CSS -->
   <link href="https://fonts.googleapis.com/css?family=Inter:400,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <style>
-    /* Responsive grid for mobile */
     @media (max-width: 700px) {
-      .article-grid {
-        grid-template-columns: 1fr !important;
-      }
+      .article-grid { grid-template-columns: 1fr !important; }
     }
+    .auth-links a { color: #7fd7ff; margin-right: 1rem; }
+    .auth-links span { margin-right: 1rem; }
+    .favorites-list { margin: 2rem 0; color: #b5c2ca; }
+    .favorites-list ul { margin: 0; padding-left: 1.5rem; }
+    .favorited { background: #7fd7ff !important; color: #232526 !important; }
   </style>
 </head>
 <body>
   <nav class="navbar">
     <h1>📰 interality news digest</h1>
     <div class="filter-menu">
-      <!-- Source Dropdown -->
       <form method="get" action="/" style="display:inline;">
         <select id="source-select" name="source" onchange="this.form.submit()">
           <option value="all">All Sources</option>
@@ -28,7 +30,6 @@
             </option>
           {% endfor %}
         </select>
-        <!-- Category Dropdown -->
         <select id="category-select" name="category" onchange="this.form.submit()">
           <option value="general">All Categories</option>
           {% for cat in categories %}
@@ -37,7 +38,6 @@
             </option>
           {% endfor %}
         </select>
-        <!-- Search Bar -->
         <input type="text" name="q" placeholder="Search news..." value="{{ request.args.get('q', '') }}"
                style="padding:0.5rem; border-radius:6px; border:1px solid #444; background:#232526; color:#eaeaea;">
         <button type="submit"
@@ -46,9 +46,23 @@
         </button>
       </form>
     </div>
+    <div class="auth-links">
+      {% if current_user.is_authenticated %}
+        <span>Hello, {{ current_user.username }}!</span>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
+      {% endif %}
+    </div>
   </nav>
 
   <div class="container">
+    <!-- Favorites section (AJAX will update this div) -->
+    <div id="favorites-container">
+      {% include 'favorites_list.html' %}
+    </div>
+
     {% if articles %}
       <div class="article-grid">
         {% for article in articles %}
@@ -69,6 +83,18 @@
             {% elif article.image %}
               <img src="{{ article.image }}" alt="Article image" style="max-width: 300px;">
             {% endif %}
+            {% if current_user.is_authenticated %}
+              {% set this_source = article.source.id if article.source and article.source.id else (article.source.name if article.source and article.source.name else '') %}
+              {% set this_category = article.source.category if article.source and article.source.category else request.args.get('category', 'general') %}
+              {% set is_favorited = user_favorites|selectattr('source', 'equalto', this_source)|selectattr('category', 'equalto', this_category)|list %}
+              <button 
+                class="favorite-btn{% if is_favorited %} favorited{% endif %}"
+                data-source="{{ this_source }}"
+                data-category="{{ this_category }}"
+                style="margin-top:0.5rem; background:#393c3f; color:#7fd7ff; border:none; border-radius:4px; padding:0.3rem 0.8rem; cursor:pointer;">
+                {{ '★ Remove Favorite' if is_favorited else '☆ Add Favorite' }}
+              </button>
+            {% endif %}
           </div>
         {% endfor %}
       </div>
@@ -78,5 +104,45 @@
       </div>
     {% endif %}
   </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Use event delegation to handle dynamically created buttons
+    $(document).on('click', '.favorite-btn', function(e) {
+        e.preventDefault();
+        const $btn = $(this);
+        const source = $btn.data('source');
+        const category = $btn.data('category');
+        $.ajax({
+            url: "{{ url_for('favorite') }}",
+            method: 'POST',
+            data: { source: source, category: category },
+            success: function(response) {
+                if (response.status === 'added') {
+                    $btn.html('★ Remove Favorite').addClass('favorited');
+                } else if (response.status === 'removed') {
+                    $btn.html('☆ Add Favorite').removeClass('favorited');
+                }
+                // Update the favorites list instantly
+                $('#favorites-container').html(response.favorites_html);
+
+                // Show/hide the container as needed
+                if ($.trim(response.favorites_html) === "") {
+                    $('#favorites-container').hide();
+                } else {
+                    $('#favorites-container').show();
+                }
+            }
+        });
+    });
+
+    // Show/hide on page load based on content
+    if ($.trim($('#favorites-container').html()) === "") {
+        $('#favorites-container').hide();
+    } else {
+        $('#favorites-container').show();
+    }
+});
+</script>
 </body>
 </html>

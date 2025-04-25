@@ -1,0 +1,18 @@
+{% if user_favorites %}
+  <div class="favorites-list">
+    <h3>Your Favorites:</h3>
+    <ul>
+      {% for fav in user_favorites if fav.source or fav.category %}
+        <li>
+          Source: {{ fav.source or 'N/A' }}, Category: {{ fav.category or 'N/A' }}
+          <button class="favorite-btn"
+                  data-source="{{ fav.source }}"
+                  data-category="{{ fav.category }}"
+                  style="margin-left:1rem; background:#393c3f; color:#7fd7ff; border:none; border-radius:4px; padding:0.3rem 0.8rem; cursor:pointer;">
+            ★ Remove
+          </button>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}

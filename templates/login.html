@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login - Global News Digest</title>
+  <link href="https://fonts.googleapis.com/css?family=Inter:400,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    .auth-container {
+      max-width: 400px;
+      margin: 4rem auto;
+      background: #232526;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      color: #eaeaea;
+    }
+    label { display: block; margin-top: 1rem; }
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: 0.5rem; margin-top: 0.25rem;
+      border-radius: 6px; border: 1px solid #444; background: #181a1b; color: #eaeaea;
+    }
+    button {
+      margin-top: 1.5rem; width: 100%; padding: 0.7rem;
+      border-radius: 6px; border: none; background: #7fd7ff; color: #232526; font-weight: bold; cursor: pointer;
+    }
+    .switch-link {
+      display: block; text-align: center; margin-top: 1rem;
+    }
+    .flash { color: #ffb3b3; margin-top: 1rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <h2>Login</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+    <form method="POST">
+      <label for="username">Username</label>
+      <input type="text" name="username" id="username" required>
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" required>
+      <button type="submit">Login</button>
+    </form>
+    <a href="{{ url_for('register') }}" class="switch-link">Don't have an account? Register</a>
+  </div>
+</body>
+</html>

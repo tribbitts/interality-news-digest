@@ -88,3 +88,8 @@ select {
     display: inline-block;
     padding: 0.2rem 0.6rem;
     bord
+}
+.favorited {
+  background: #7fd7ff !important;
+  color: #232526 !important;
+}    
