@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>interality news digest</title>
+  <!-- Modern font and dark theme CSS -->
+  <link href="https://fonts.googleapis.com/css?family=Inter:400,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    /* Responsive grid for mobile */
+    @media (max-width: 700px) {
+      .article-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <h1>📰 interality news digest</h1>
+    <div class="filter-menu">
+      <!-- Source Dropdown -->
+      <form method="get" action="/" style="display:inline;">
+        <select id="source-select" name="source" onchange="this.form.submit()">
+          <option value="all">All Sources</option>
+          {% for src in sources %}
+            <option value="{{ src.id }}" {% if request.args.get('source') == src.id %}selected{% endif %}>
+              {{ src.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <!-- Category Dropdown -->
+        <select id="category-select" name="category" onchange="this.form.submit()">
+          <option value="general">All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat }}" {% if request.args.get('category') == cat %}selected{% endif %}>
+              {{ cat.title() }}
+            </option>
+          {% endfor %}
+        </select>
+        <!-- Search Bar -->
+        <input type="text" name="q" placeholder="Search news..." value="{{ request.args.get('q', '') }}"
+               style="padding:0.5rem; border-radius:6px; border:1px solid #444; background:#232526; color:#eaeaea;">
+        <button type="submit"
+                style="padding:0.5rem 1rem; border-radius:6px; border:none; background:#7fd7ff; color:#232526; font-weight:bold; cursor:pointer;">
+          Search
+        </button>
+      </form>
+    </div>
+  </nav>
+
+  <div class="container">
+    {% if articles %}
+      <div class="article-grid">
+        {% for article in articles %}
+          <div class="article-card">
+            <div class="source-tag">
+              {{ article.source.name if article.source and article.source.name else (article.source.title if article.source and article.source.title else 'Unknown Source') }}
+            </div>
+            <h2>
+              <a href="{{ article.url }}" target="_blank">
+                {{ article.title }}
+              </a>
+            </h2>
+            {% if article.description %}
+              <p>{{ article.description }}</p>
+            {% endif %}
+            {% if article.urlToImage %}
+              <img src="{{ article.urlToImage }}" alt="Article image" style="max-width: 300px;">
+            {% elif article.image %}
+              <img src="{{ article.image }}" alt="Article image" style="max-width: 300px;">
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align:center; margin-top:3rem; color:#ccc;">
+        <h2>No articles found for your selection.</h2>
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>
