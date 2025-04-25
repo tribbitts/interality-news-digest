@@ -1,0 +1,15 @@
+{
+  "name": "Global News Digest",
+  "short_name": "NewsDigest",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#181a1b",
+  "theme_color": "#181a1b",
+  "icons": [
+    {
+      "src": "/static/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
