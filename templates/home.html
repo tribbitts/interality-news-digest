@@ -2,83 +2,90 @@
 
 {% block content %}
 <div class="search-container">
-<div class="container">
-    <!-- Category Pills -->
-    <div class="category-pills">
-        {% for category in categories %}
-            <a href="{{ url_for('home', category=category, q=search_query) }}"
-               class="category-pill{% if selected_category == category %} active{% endif %}">
-                {{ category.replace('-', ' ').title() }}
-            </a>
-        {% endfor %}
-    </div>
-
-    <!-- Centered Search Bar -->
-    <div class="search-container">
-        <form method="get" class="centered-search">
-            <input type="text" name="q" id="q" 
-                   value="{{ search_query }}" 
-                   placeholder="Search news..." 
-                   class="search-input">
-            <button type="submit" class="search-button">🔍 Search</button>
-        </form>
-    </div>
-
-    <!-- Articles Grid -->
-    {% if articles %}
-        <div class="articles-grid">
-            {% for article in articles %}
-                <div class="article-card">
-                    {% if article.image %}
-                        <img src="{{ article.image }}" class="article-image">
-                    {% endif %}
-                    <div class="article-content">
-                        <h2>{{ article.title }}</h2>
-                        <p>{{ article.description }}</p>
-                        <div class="article-actions">
-                            <a href="{{ article.url }}" target="_blank">Read →</a>
-                            {% if current_user.is_authenticated %}
-                                <button class="save-btn" 
-                                        data-title="{{ article.title }}"
-                                        data-url="{{ article.url }}"
-                                        data-image="{{ article.image }}">
-                                    💾 Save
-                                </button>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="no-articles">
-            <p>No articles found. Try adjusting your search.</p>
-        </div>
-    {% endif %}
+  <form method="get" class="centered-search">
+    <input type="text" name="q" value="{{ search_query }}" 
+           placeholder="Search news..." class="search-input">
+    <button type="submit" class="search-button">🔍 Search</button>
+  </form>
 </div>
+
+<div class="category-pills">
+  {% for category in categories %}
+    <a href="{{ url_for('home', category=category, q=search_query) }}"
+       class="category-pill{% if selected_category == category %} active{% endif %}">
+      {{ category.replace('-', ' ').title() }}
+    </a>
+  {% endfor %}
+</div>
+
+{% if articles %}
+<div class="articles-grid">
+  {% for article in articles %}
+    <a href="{{ article.url }}" target="_blank" class="article-card-link">
+      <div class="article-card">
+        {% if article.image %}
+          <img src="{{ article.image }}" class="article-image">
+        {% endif %}
+        <div class="article-content">
+          <h2>{{ article.title }}</h2>
+          <p>{{ article.description }}</p>
+          <div class="article-meta">
+            <span class="article-source">Source: {{ article.source }}</span>
+            {% if article.publishedAt %}
+              <span class="article-date">{{ article.publishedAt[:10] }}</span>
+            {% endif %}
+          </div>
+          {% if article.categories %}
+            <div class="article-categories">
+              Categories:
+              {% for cat in article.categories %}
+                <span class="category">{{ cat }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if current_user.is_authenticated %}
+            <button class="save-btn"
+                    data-title="{{ article.title }}"
+                    data-url="{{ article.url }}"
+                    data-image="{{ article.image }}"
+                    onclick="event.stopPropagation();">
+              💾 Save
+            </button>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+  {% endfor %}
+</div>
+{% else %}
+  <div class="no-articles">
+    <p>No articles found. Try adjusting your search.</p>
+  </div>
+{% endif %}
+
 <script>
-// Save article functionality
 document.querySelectorAll('.save-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const articleData = {
-            title: btn.dataset.title,
-            url: btn.dataset.url,
-            image: btn.dataset.image
-        };
-        
-        fetch('/save_article', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(articleData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if(data.status === 'saved') {
-                btn.textContent = '✓ Saved!';
-                btn.disabled = true;
-            }
-        });
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const articleData = {
+      title: btn.dataset.title,
+      url: btn.dataset.url,
+      image: btn.dataset.image
+    };
+    fetch('/save_article', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(articleData)
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'saved') {
+        btn.textContent = '✓ Saved!';
+        btn.disabled = true;
+      }
     });
+  });
 });
 </script>
 {% endblock %}

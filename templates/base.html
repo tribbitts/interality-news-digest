@@ -6,9 +6,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-<<nav class="navbar">
+<nav class="navbar">
     <div class="navbar-left">
-        <h1>📰 interality news digest</h1>
+       <h1>
+  <a href="{{ url_for('home') }}" class="logo-link" aria-label="Home">
+    📰 interaliity news digest
+  </a>
+</h1>
     </div>
     <div class="navbar-right">
         {% if current_user.is_authenticated %}
