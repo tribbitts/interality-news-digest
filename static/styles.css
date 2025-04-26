@@ -1,95 +1,287 @@
-body {
-    background: #181a1b;
-    color: #eaeaea;
-    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
+body {
+  background-color: #1a1d20;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Navbar */
 .navbar {
-    background: #232526;
-    color: #fff;
-    padding: 1.5rem 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  background: #141619;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .navbar h1 {
-    font-size: 2rem;
-    letter-spacing: 1px;
+  color: #4a90e2;
+  font-size: 1.5rem;
 }
 
-.filter-menu {
-    display: flex;
-    gap: 1rem;
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-select {
-    background: #232526;
-    color: #eaeaea;
-    border: 1px solid #444;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-size: 1rem;
+.nav-link {
+  color: #e0e0e0;
+  text-decoration: none;
+  transition: color 0.3s ease;
 }
 
+.nav-link:hover {
+  color: #4a90e2;
+}
+
+.username {
+  color: #e0e0e0;
+  margin-right: 1rem;
+  font-weight: 500;
+}
+
+/* Main container */
 .container {
-    max-width: 900px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+  flex: 1;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.article-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-}
-@media (min-width: 700px) {
-    .article-grid {
-        grid-template-columns: 1fr 1fr;
-    }
+/* Category Pills */
+.category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
 }
 
+.category-pill {
+  background: #2d2f33;
+  color: #e0e0e0;
+  padding: 0.5rem 1.2rem;
+  border-radius: 20px;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: background 0.2s, color 0.2s;
+}
+
+.category-pill:hover,
+.category-pill.active {
+  background: #4a90e2;
+  color: #fff;
+}
+
+/* Centered Search Bar */
+.search-container {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.centered-search {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 600px;
+  width: 100%;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.8rem;
+  border-radius: 25px;
+  border: 2px solid #4a90e2;
+  background: #2d2f33;
+  color: white;
+}
+
+.search-button {
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  background: #4a90e2;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* Articles grid */
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
 
 .article-card {
-    background: #232526;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-    transition: transform 0.12s;
+  background: #222529;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .article-card:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  transform: translateY(-3px);
 }
 
-.article-card h2 {
-    margin-top: 0;
-    font-size: 1.2rem;
+.article-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-bottom: 2px solid #4a90e233;
+  display: block;
 }
 
-.article-card a {
-    color: #7fd7ff;
-    text-decoration: none;
-    transition: color 0.2s;
+.article-content {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.article-card a:hover {
-    color: #fff;
-    text-decoration: underline;
+.article-title {
+  color: #f0f0f0;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
 }
 
-.source-tag {
-    background: #393c3f;
-    color: #b5c2ca;
-    display: inline-block;
-    padding: 0.2rem 0.6rem;
-    bord
+.article-title a {
+  color: inherit;
+  text-decoration: none;
 }
-.favorited {
-  background: #7fd7ff !important;
-  color: #232526 !important;
-}    
+
+.article-description {
+  color: #a0a0a0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.article-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.article-actions {
+  display: flex;
+  align-items: center;
+  margin-top: 1rem;
+  gap: 1rem;
+}
+
+/* Save Button */
+.save-btn {
+  background: #2d2f33;
+  border: 1px solid #4a90e2;
+  color: #4a90e2;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-left: 1rem;
+}
+
+.save-btn:hover {
+  background: #4a90e255;
+}
+
+.save-btn[disabled] {
+  background: #4a90e2;
+  color: white;
+  cursor: not-allowed;
+}
+
+/* Footer */
+.site-footer {
+  background: #141619;
+  margin-top: auto;
+  padding: 2rem 1rem;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.footer-section {
+  padding: 0 1rem;
+}
+
+.footer-section h4 {
+  color: #4a90e2;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.social-links,
+.footer-section ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.social-links a,
+.footer-section ul a {
+  color: #e0e0e0;
+  text-decoration: none;
+  display: block;
+  padding: 0.3rem 0;
+  transition: color 0.3s ease;
+}
+
+.social-links a:hover,
+.footer-section ul a:hover {
+  color: #4a90e2;
+}
+
+#return-to-top {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: none;
+  font-size: 1.5rem;
+}
+
+#return-to-top:hover {
+  background: #357abd;
+}
+
+/* Responsive tweaks */
+@media (max-width: 800px) {
+  .container {
+    padding: 1rem;
+  }
+  .articles-grid {
+    grid-template-columns: 1fr;
+  }
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

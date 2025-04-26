@@ -1,122 +1,154 @@
 import os
-import requests
-from flask import Flask, render_template, request, make_response, redirect, url_for, flash, jsonify
-from dotenv import load_dotenv
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+import requests
 
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-default-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'devsecret')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
-login_manager = LoginManager(app)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# API Configuration
-APIS = {
-    'newsapi': {
-        'url': 'https://newsapi.org/v2/top-headlines',
-        'key': os.getenv('NEWSAPI_KEY')
-    },
-    'gnews': {
-        'url': 'https://gnews.io/api/v4/top-headlines',
-        'key': os.getenv('GNEWS_KEY')
-    }
+# --- Custom Categories for Pills UI ---
+CUSTOM_CATEGORIES = {
+    "technology": {"thenewsapi": "technology", "gnews": "technology", "keywords": ["tech", "ai", "innovation"]},
+    "video-games": {"thenewsapi": "gaming", "gnews": None, "keywords": ["gaming", "video games", "esports"]},
+    "politics": {"thenewsapi": "politics", "gnews": "world", "keywords": ["politics", "election"]},
+    "economy": {"thenewsapi": "business", "gnews": "business", "keywords": ["economy", "markets"]},
+    "stock-market": {"thenewsapi": "finance", "gnews": "business", "keywords": ["stocks", "wall street"]},
+    "science": {"thenewsapi": "science", "gnews": "science", "keywords": ["space", "physics", "biology"]},
+    "sports": {"thenewsapi": "sports", "gnews": "sports", "keywords": ["sports", "football", "basketball"]},
+    "general": {"thenewsapi": "general", "gnews": "general", "keywords": []}
 }
 
-# Database Models
-class User(UserMixin, db.Model):
+# --- Database Models ---
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), unique=True, nullable=False)
-    password = db.Column(db.String(128), nullable=False)
-    favorites = db.relationship('Favorite', backref='user', lazy=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    saved_articles = db.relationship('SavedArticle', backref='user', lazy=True)
 
-class Favorite(db.Model):
+    @property
+    def password(self):
+        raise AttributeError('Password is write-only.')
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+class SavedArticle(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(300), nullable=False)
+    url = db.Column(db.String(500), nullable=False)
+    image = db.Column(db.String(500))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    source = db.Column(db.String(50))
-    category = db.Column(db.String(50))
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Helper Functions
-def get_newsapi_sources():
-    try:
-        response = requests.get(
-            "https://newsapi.org/v2/top-headlines/sources",
-            params={'country': 'us', 'apiKey': APIS['newsapi']['key']}
-        )
-        data = response.json()
-        return data.get('sources', [])
-    except Exception as e:
-        print("Error fetching sources:", str(e))
-        return []
+# --- News Fetching Functions ---
+def fetch_thenewsapi_articles(api_key, category=None, query=None):
+    url = "https://api.thenewsapi.com/v1/news/all"
+    params = {
+        "api_token": api_key,
+        "language": "en",
+        "country": "us",
+        "limit": 20
+    }
+    if category and category in CUSTOM_CATEGORIES:
+        params["categories"] = CUSTOM_CATEGORIES[category]["thenewsapi"]
+    if query:
+        params["search"] = query
+    resp = requests.get(url, params=params)
+    data = resp.json()
+    articles = []
+    for item in data.get("data", []):
+        articles.append({
+            "title": item.get("title"),
+            "description": item.get("description"),
+            "url": item.get("url"),
+            "image": item.get("image_url"),
+            "source": item.get("source"),
+            "categories": item.get("categories", []),
+            "publishedAt": item.get("published_at")
+        })
+    return articles
 
-def fetch_news(api_name, params):
-    config = APIS[api_name]
-    try:
-        final_params = params.copy()
-        if api_name == 'newsapi':
-            final_params['apiKey'] = config['key']
-        elif api_name == 'gnews':
-            final_params['apikey'] = config['key']
-        response = requests.get(config['url'], params=final_params)
-        data = response.json()
-        return data.get('articles', [])
-    except Exception as e:
-        print(f"Error fetching from {api_name}: {str(e)}")
-        return []
+def fetch_gnews_articles(api_key, category=None, query=None):
+    url = "https://gnews.io/api/v4/top-headlines"
+    params = {
+        "token": api_key,
+        "lang": "en",
+        "country": "us",
+        "max": 20
+    }
+    if category and category in CUSTOM_CATEGORIES:
+        gnews_cat = CUSTOM_CATEGORIES[category]["gnews"]
+        if gnews_cat:
+            params["topic"] = gnews_cat
+        else:
+            params["q"] = " OR ".join(CUSTOM_CATEGORIES[category]["keywords"])
+    if query:
+        params["q"] = query
+    resp = requests.get(url, params=params)
+    data = resp.json()
+    articles = []
+    for item in data.get("articles", []):
+        articles.append({
+            "title": item.get("title"),
+            "description": item.get("description"),
+            "url": item.get("url"),
+            "image": item.get("image"),
+            "source": item.get("source", {}).get("name", "GNews"),
+            "categories": [],
+            "publishedAt": item.get("publishedAt")
+        })
+    return articles
 
-# Routes
+def fetch_news(category=None, query=None):
+    thenewsapi_key = os.getenv("THENEWSAPI_KEY")
+    gnews_key = os.getenv("GNEWS_API_KEY")
+    articles = []
+    if thenewsapi_key:
+        try:
+            articles += fetch_thenewsapi_articles(thenewsapi_key, category, query)
+        except Exception as e:
+            print("TheNewsAPI error:", e)
+    if gnews_key:
+        try:
+            articles += fetch_gnews_articles(gnews_key, category, query)
+        except Exception as e:
+            print("GNews error:", e)
+    articles.sort(key=lambda x: x.get("publishedAt", ""), reverse=True)
+    return articles
+
+# --- Routes ---
 @app.route('/')
 def home():
-    source = request.args.get('source', 'all')
-    category = request.args.get('category', 'general')
-    query = request.args.get('q', '').strip()
-
-    sources_list = get_newsapi_sources()
-    all_sources = sorted(sources_list, key=lambda x: x['name'])
-    all_categories = sorted({src['category'] for src in sources_list})
-
-    # Build API parameters
-    articles = []
-    newsapi_params = {}
-    if source != 'all':
-        newsapi_params['sources'] = source
-    else:
-        newsapi_params['country'] = 'us'
-        if category != 'general':
-            newsapi_params['category'] = category
-    if query:
-        newsapi_params['q'] = query
-    newsapi_params = {k: v for k, v in newsapi_params.items() if v is not None}
-
-    gnews_params = {'lang': 'en'}
-    if query:
-        gnews_params['q'] = query
-    else:
-        if category != 'general':
-            gnews_params['topic'] = category
-
-    articles += fetch_news('newsapi', newsapi_params)
-    articles += fetch_news('gnews', gnews_params)
-
-    # Clean invalid favorites
-    user_favorites = []
-    if current_user.is_authenticated:
-        user_favorites = [fav for fav in current_user.favorites if fav.source or fav.category]
-
+    selected_category = request.args.get('category', 'general')
+    query = request.args.get('q')
+    articles = fetch_news(category=selected_category, query=query)
     return render_template(
         'home.html',
         articles=articles,
-        sources=all_sources,
-        categories=all_categories,
-        user_favorites=user_favorites
+        categories=CUSTOM_CATEGORIES.keys(),
+        selected_category=selected_category,
+        search_query=query or ""
     )
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -125,14 +157,14 @@ def register():
         username = request.form['username']
         password = request.form['password']
         if User.query.filter_by(username=username).first():
-            flash('Username already exists. Please choose another.')
+            flash('Username already exists.', 'danger')
             return redirect(url_for('register'))
-        hashed_password = generate_password_hash(password)
-        user = User(username=username, password=hashed_password)
+        user = User(username=username)
+        user.password = password
         db.session.add(user)
         db.session.commit()
-        login_user(user)
-        return redirect(url_for('home'))
+        flash('Registration successful. Please log in.', 'success')
+        return redirect(url_for('login'))
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -141,53 +173,50 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
+        if user and user.verify_password(password):
             login_user(user)
+            flash('Logged in successfully.', 'success')
             return redirect(url_for('home'))
-        else:
-            flash('Login failed. Check your username and password.')
+        flash('Invalid credentials.', 'danger')
     return render_template('login.html')
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
+    flash('Logged out.', 'info')
     return redirect(url_for('home'))
 
-from flask import render_template
-
-@app.route('/favorite', methods=['POST'])
+@app.route('/save_article', methods=['POST'])
 @login_required
-def favorite():
-    source = request.form.get('source')
-    category = request.form.get('category')
-    if not source and not category:
-        return jsonify({'status': 'error', 'message': 'No source/category provided'})
-
-    existing_fav = Favorite.query.filter_by(
+def save_article():
+    article_data = request.get_json()
+    if not SavedArticle.query.filter_by(
         user_id=current_user.id,
-        source=source,
-        category=category
-    ).first()
-
-    if existing_fav:
-        db.session.delete(existing_fav)
+        url=article_data['url']
+    ).first():
+        saved = SavedArticle(
+            title=article_data['title'],
+            url=article_data['url'],
+            image=article_data.get('image', ''),
+            user_id=current_user.id
+        )
+        db.session.add(saved)
         db.session.commit()
-        status = 'removed'
-    else:
-        fav = Favorite(user_id=current_user.id, source=source, category=category)
-        db.session.add(fav)
-        db.session.commit()
-        status = 'added'
+        return jsonify({'status': 'saved'})
+    return jsonify({'status': 'exists'})
 
-    # This is crucial: render the updated favorites list partial!
-    user_favorites = [fav for fav in current_user.favorites if fav.source or fav.category]
-    favorites_html = render_template('favorites_list.html', user_favorites=user_favorites)
-    return jsonify({'status': status, 'favorites_html': favorites_html})
+@app.route('/saved')
+@login_required
+def saved():
+    saved_articles = current_user.saved_articles
+    return render_template('saved.html', articles=saved_articles)
 
-# Initialize DB
-with app.app_context():
-    db.create_all()
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('static', 'manifest.json')
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)

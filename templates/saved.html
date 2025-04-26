@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Your Saved Articles</h1>
+<div class="articles-grid">
+    {% for article in articles %}
+        <div class="article-card">
+            {% if article.image %}
+                <img src="{{ article.image }}" class="article-image">
+            {% endif %}
+            <div class="article-content">
+                <h2>{{ article.title }}</h2>
+                <a href="{{ article.url }}" target="_blank">Read →</a>
+            </div>
+        </div>
+    {% else %}
+        <p>No saved articles yet!</p>
+    {% endfor %}
+</div>
+{% endblock %}

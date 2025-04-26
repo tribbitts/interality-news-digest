@@ -1,153 +1,84 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6962911069135509"
-     crossorigin="anonymous"></script>
-  <title>interality news digest</title>
-  <link href="https://fonts.googleapis.com/css?family=Inter:400,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-<meta name="theme-color" content="#181a1b">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.png') }}">
-  <style>
-    @media (max-width: 700px) {
-      .article-grid { grid-template-columns: 1fr !important; }
-    }
-    .auth-links a { color: #7fd7ff; margin-right: 1rem; }
-    .auth-links span { margin-right: 1rem; }
-    .favorites-list { margin: 2rem 0; color: #b5c2ca; }
-    .favorites-list ul { margin: 0; padding-left: 1.5rem; }
-    .favorited { background: #7fd7ff !important; color: #232526 !important; }
-  </style>
-</head>
-<body>
-  <nav class="navbar">
-    <h1>📰 interality news digest</h1>
-    <div class="filter-menu">
-      <form method="get" action="/" style="display:inline;">
-        <select id="source-select" name="source" onchange="this.form.submit()">
-          <option value="all">All Sources</option>
-          {% for src in sources %}
-            <option value="{{ src.id }}" {% if request.args.get('source') == src.id %}selected{% endif %}>
-              {{ src.name }}
-            </option>
-          {% endfor %}
-        </select>
-        <select id="category-select" name="category" onchange="this.form.submit()">
-          <option value="general">All Categories</option>
-          {% for cat in categories %}
-            <option value="{{ cat }}" {% if request.args.get('category') == cat %}selected{% endif %}>
-              {{ cat.title() }}
-            </option>
-          {% endfor %}
-        </select>
-        <input type="text" name="q" placeholder="Search news..." value="{{ request.args.get('q', '') }}"
-               style="padding:0.5rem; border-radius:6px; border:1px solid #444; background:#232526; color:#eaeaea;">
-        <button type="submit"
-                style="padding:0.5rem 1rem; border-radius:6px; border:none; background:#7fd7ff; color:#232526; font-weight:bold; cursor:pointer;">
-          Search
-        </button>
-      </form>
-    </div>
-    <div class="auth-links">
-      {% if current_user.is_authenticated %}
-        <span>Hello, {{ current_user.username }}!</span>
-        <a href="{{ url_for('logout') }}">Logout</a>
-      {% else %}
-        <a href="{{ url_for('login') }}">Login</a>
-        <a href="{{ url_for('register') }}">Register</a>
-      {% endif %}
-    </div>
-  </nav>
+{% extends "base.html" %}
 
-  <div class="container">
-    <!-- Favorites section (AJAX will update this div) -->
-    <div id="favorites-container">
-      {% include 'favorites_list.html' %}
-    </div>
-
-    {% if articles %}
-      <div class="article-grid">
-        {% for article in articles %}
-          <div class="article-card">
-            <div class="source-tag">
-              {{ article.source.name if article.source and article.source.name else (article.source.title if article.source and article.source.title else 'Unknown Source') }}
-            </div>
-            <h2>
-              <a href="{{ article.url }}" target="_blank">
-                {{ article.title }}
-              </a>
-            </h2>
-            {% if article.description %}
-              <p>{{ article.description }}</p>
-            {% endif %}
-            {% if article.urlToImage %}
-              <img src="{{ article.urlToImage }}" alt="Article image" style="max-width: 300px;">
-            {% elif article.image %}
-              <img src="{{ article.image }}" alt="Article image" style="max-width: 300px;">
-            {% endif %}
-            {% if current_user.is_authenticated %}
-              {% set this_source = article.source.id if article.source and article.source.id else (article.source.name if article.source and article.source.name else '') %}
-              {% set this_category = article.source.category if article.source and article.source.category else request.args.get('category', 'general') %}
-              {% set is_favorited = user_favorites|selectattr('source', 'equalto', this_source)|selectattr('category', 'equalto', this_category)|list %}
-              <button 
-                class="favorite-btn{% if is_favorited %} favorited{% endif %}"
-                data-source="{{ this_source }}"
-                data-category="{{ this_category }}"
-                style="margin-top:0.5rem; background:#393c3f; color:#7fd7ff; border:none; border-radius:4px; padding:0.3rem 0.8rem; cursor:pointer;">
-                {{ '★ Remove Favorite' if is_favorited else '☆ Add Favorite' }}
-              </button>
-            {% endif %}
-          </div>
+{% block content %}
+<div class="search-container">
+<div class="container">
+    <!-- Category Pills -->
+    <div class="category-pills">
+        {% for category in categories %}
+            <a href="{{ url_for('home', category=category, q=search_query) }}"
+               class="category-pill{% if selected_category == category %} active{% endif %}">
+                {{ category.replace('-', ' ').title() }}
+            </a>
         {% endfor %}
-      </div>
-    {% else %}
-      <div style="text-align:center; margin-top:3rem; color:#ccc;">
-        <h2>No articles found for your selection.</h2>
-      </div>
-    {% endif %}
-  </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-$(document).ready(function() {
-    // Use event delegation to handle dynamically created buttons
-    $(document).on('click', '.favorite-btn', function(e) {
-        e.preventDefault();
-        const $btn = $(this);
-        const source = $btn.data('source');
-        const category = $btn.data('category');
-        $.ajax({
-            url: "{{ url_for('favorite') }}",
-            method: 'POST',
-            data: { source: source, category: category },
-            success: function(response) {
-                if (response.status === 'added') {
-                    $btn.html('★ Remove Favorite').addClass('favorited');
-                } else if (response.status === 'removed') {
-                    $btn.html('☆ Add Favorite').removeClass('favorited');
-                }
-                // Update the favorites list instantly
-                $('#favorites-container').html(response.favorites_html);
+    </div>
 
-                // Show/hide the container as needed
-                if ($.trim(response.favorites_html) === "") {
-                    $('#favorites-container').hide();
-                } else {
-                    $('#favorites-container').show();
-                }
+    <!-- Centered Search Bar -->
+    <div class="search-container">
+        <form method="get" class="centered-search">
+            <input type="text" name="q" id="q" 
+                   value="{{ search_query }}" 
+                   placeholder="Search news..." 
+                   class="search-input">
+            <button type="submit" class="search-button">🔍 Search</button>
+        </form>
+    </div>
+
+    <!-- Articles Grid -->
+    {% if articles %}
+        <div class="articles-grid">
+            {% for article in articles %}
+                <div class="article-card">
+                    {% if article.image %}
+                        <img src="{{ article.image }}" class="article-image">
+                    {% endif %}
+                    <div class="article-content">
+                        <h2>{{ article.title }}</h2>
+                        <p>{{ article.description }}</p>
+                        <div class="article-actions">
+                            <a href="{{ article.url }}" target="_blank">Read →</a>
+                            {% if current_user.is_authenticated %}
+                                <button class="save-btn" 
+                                        data-title="{{ article.title }}"
+                                        data-url="{{ article.url }}"
+                                        data-image="{{ article.image }}">
+                                    💾 Save
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-articles">
+            <p>No articles found. Try adjusting your search.</p>
+        </div>
+    {% endif %}
+</div>
+<script>
+// Save article functionality
+document.querySelectorAll('.save-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const articleData = {
+            title: btn.dataset.title,
+            url: btn.dataset.url,
+            image: btn.dataset.image
+        };
+        
+        fetch('/save_article', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(articleData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'saved') {
+                btn.textContent = '✓ Saved!';
+                btn.disabled = true;
             }
         });
     });
-
-    // Show/hide on page load based on content
-    if ($.trim($('#favorites-container').html()) === "") {
-        $('#favorites-container').hide();
-    } else {
-        $('#favorites-container').show();
-    }
 });
 </script>
-</body>
-</html>
+{% endblock %}

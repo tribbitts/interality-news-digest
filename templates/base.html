@@ -1,56 +1,67 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.5">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
+    <meta charset="UTF-8">
+    <title>{% block title %}inerality news digest{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;Global News Digest&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;nav class="navbar"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;📰 Global News Digest&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="filter-menu"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;select id="source-select"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="all"&gt;All Sources&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="bbc-news"&gt;BBC&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="reuters"&gt;Reuters&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;select id="category-select"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="general"&gt;All Categories&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="business"&gt;Business&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="technology"&gt;Tech&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/nav&gt;</p>
-<p class="p2"><span class="Apple-converted-space">  </span></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="container"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>{% block content %}{% endblock %}</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>// JavaScript to handle filter changes</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('source-select').addEventListener('change', updateNews);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('category-select').addEventListener('change', updateNews);</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>function updateNews() {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const source = document.getElementById('source-select').value;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const category = document.getElementById('category-select').value;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>window.location.href = `/?source=${source}&amp;category=${category}`;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+<<nav class="navbar">
+    <div class="navbar-left">
+        <h1>📰 interality news digest</h1>
+    </div>
+    <div class="navbar-right">
+        {% if current_user.is_authenticated %}
+            <span class="username">{{ current_user.username }}</span>
+            <a href="{{ url_for('saved') }}" class="nav-link">Saved Articles</a>
+            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="nav-link">Sign In</a>
+            <a href="{{ url_for('register') }}" class="nav-link">Register</a>
+        {% endif %}
+    </div>
+</nav>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Interality News</h4>
+                <p>&copy; 2024 Interality.tech</p>
+                <p>All rights reserved</p>
+            </div>
+            <div class="footer-section">
+                <h4>Connect</h4>
+                <ul class="social-links">
+                    <li><a href="#">Twitter</a></li>
+                    <li><a href="#">Facebook</a></li>
+                    <li><a href="#">LinkedIn</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="/contact">Contact Us</a></li>
+                    <li><a href="/privacy">Privacy Policy</a></li>
+                    <li><a href="/terms">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        <button id="return-to-top" title="Return to Top" style="display:none;">↑</button>
+    </footer>
+    <script>
+        // Return to Top Button
+        window.addEventListener('scroll', function() {
+            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            document.getElementById('return-to-top').style.display =
+                (scrollTop > 300) ? 'block' : 'none';
+        });
+        document.getElementById('return-to-top').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
 </body>
 </html>
