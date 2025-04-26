@@ -93,32 +93,3 @@ select {
   background: #7fd7ff !important;
   color: #232526 !important;
 }    
-.navbar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2vw;
-  background: #181a1b;
-}
-
-@media (max-width: 700px) {
-  .navbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .filter-menu {
-    width: 100%;
-    margin-top: 1rem;
-  }
-}
-button, input[type="text"], select {
-  font-size: 1.1rem;
-  padding: 0.7rem 1rem;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-}
-footer a:hover {
-  color: #1da1f2;
-}
-

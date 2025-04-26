@@ -1,11 +1,6 @@
-{% extends 'base.html' %}
-{% block content %}
 <!DOCTYPE html>
 <html>
 <head>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6962911069135509"
      crossorigin="anonymous"></script>
   <title>interality news digest</title>
@@ -25,43 +20,6 @@
     .favorites-list { margin: 2rem 0; color: #b5c2ca; }
     .favorites-list ul { margin: 0; padding-left: 1.5rem; }
     .favorited { background: #7fd7ff !important; color: #232526 !important; }
-  /* In static/styles.css or inside <style> in your template */
-.article-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2rem;
-  margin: 2rem 0;
-}
-
-.article-card {
-  background: #232526;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-  padding: 1.5rem;
-  color: #eaeaea;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-@media (max-width: 700px) {
-  .article-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  .navbar, .filter-menu {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .auth-links {
-    margin-top: 1rem;
-    text-align: left;
-  }
-  .article-card img {
-    max-width: 100%;
-    height: auto;
-  }
-}
   </style>
 </head>
 <body>
@@ -70,21 +28,21 @@
     <div class="filter-menu">
       <form method="get" action="/" style="display:inline;">
         <select id="source-select" name="source" onchange="this.form.submit()">
-  <option value="all">All Sources</option>
-  {% for src in sources %}
-    <option value="{{ src }}" {% if request.args.get('source') == src %}selected{% endif %}>
-      {{ src }}
-    </option>
-  {% endfor %}
-</select>
+          <option value="all">All Sources</option>
+          {% for src in sources %}
+            <option value="{{ src.id }}" {% if request.args.get('source') == src.id %}selected{% endif %}>
+              {{ src.name }}
+            </option>
+          {% endfor %}
+        </select>
         <select id="category-select" name="category" onchange="this.form.submit()">
-  <option value="general">All Categories</option>
-  {% for cat in categories %}
-    <option value="{{ cat }}" {% if request.args.get('category') == cat %}selected{% endif %}>
-      {{ cat.title() }}
-    </option>
-  {% endfor %}
-</select>
+          <option value="general">All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat }}" {% if request.args.get('category') == cat %}selected{% endif %}>
+              {{ cat.title() }}
+            </option>
+          {% endfor %}
+        </select>
         <input type="text" name="q" placeholder="Search news..." value="{{ request.args.get('q', '') }}"
                style="padding:0.5rem; border-radius:6px; border:1px solid #444; background:#232526; color:#eaeaea;">
         <button type="submit"
@@ -193,4 +151,3 @@ $(document).ready(function() {
 </script>
 </body>
 </html>
-{% endblock %}
