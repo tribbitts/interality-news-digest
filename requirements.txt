@@ -1,9 +1,5 @@
 Flask==2.3.3
-Werkzeug==2.3.8
-Flask-SQLAlchemy==3.1.1
-Jinja2==3.1.2
-MarkupSafe==2.1.3
 python-dotenv==1.0.0
-gunicorn==21.2.0
-requests
-Flask-Login==0.6.3
+feedparser==6.0.10
+pygooglenews==0.1.2
+newscatcher==0.2.6
