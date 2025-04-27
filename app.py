@@ -4,7 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from pygooglenews import GoogleNews
-from newscatcher import Newscatcher
 import feedparser
 from dotenv import load_dotenv
 
@@ -62,20 +61,6 @@ def fetch_google_news(query=None):
         } for entry in results['entries']]
     except Exception as e:
         print(f"Google News error: {e}")
-        return []
-
-def fetch_newscatcher(source):
-    try:
-        nc = Newscatcher(website=source)
-        return [{
-            'title': article['title'],
-            'url': article['link'],
-            'description': article.get('summary', ''),
-            'source': source,
-            'image': article.get('media_content', [{}])[0].get('url') if article.get('media_content') else None
-        } for article in nc.get_news()]
-    except Exception as e:
-        print(f"Newscatcher error ({source}): {e}")
         return []
 
 def fetch_custom_rss(url):
